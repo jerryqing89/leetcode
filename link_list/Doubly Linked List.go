@@ -1,16 +1,24 @@
 package linklist
 
-// Design Linked List
-// https://leetcode.com/explore/learn/card/linked-list/209/singly-linked-list/1290/
+import "fmt"
 
 type MyLinkedList struct {
 	Len  int
-	Data *ListNode
+	Data *DoublyListNode
 }
 
-type ListNode struct {
-	Val  int
-	Next *ListNode
+// DoublyListNode for doubly-linked list.
+func (l *MyLinkedList) String() (rs string) {
+	if l.Data == nil {
+		return
+	}
+	curr := l.Data
+	for curr != nil {
+		rs = fmt.Sprintf("%s.%d", rs, curr.Val)
+		curr = curr.Next
+	}
+	rs = fmt.Sprintf("[%d]%s", l.Len, rs)
+	return
 }
 
 /** Initialize your data structure here. */
@@ -34,24 +42,25 @@ func (this *MyLinkedList) Get(index int) int {
 /** Add a node of value val before the first element of the linked list. After the insertion, the new node will be the first node of the linked list. */
 func (this *MyLinkedList) AddAtHead(val int) {
 	if this.Data == nil {
-		this.Data = &ListNode{val, nil}
+		this.Data = &DoublyListNode{val, nil, nil}
 		this.Len++
 		return
 	}
 
-	cur := &ListNode{
+	cur := &DoublyListNode{
 		val,
+		nil,
 		this.Data,
 	}
+	this.Data.Prev = cur
 	this.Data = cur
 	this.Len++
-
 }
 
 /** Append a node of value val to the last element of the linked list. */
 func (this *MyLinkedList) AddAtTail(val int) {
 	if this.Data == nil {
-		this.Data = &ListNode{val, nil}
+		this.Data = &DoublyListNode{val, nil, nil}
 		this.Len++
 		return
 	}
@@ -63,9 +72,8 @@ func (this *MyLinkedList) AddAtTail(val int) {
 		}
 		prev = prev.Next
 	}
-	prev.Next = &ListNode{val, nil}
+	prev.Next = &DoublyListNode{val, prev, nil}
 	this.Len++
-
 }
 
 /** Add a node of value val before the index-th node in the linked list. If index equals to the length of linked list, the node will be appended to the end of linked list. If index is greater than the length, the node will not be inserted. */
@@ -73,21 +81,19 @@ func (this *MyLinkedList) AddAtIndex(index int, val int) {
 	if this.Len < index {
 		return
 	}
-
-	if index == 0 {
+	if this.Len == 0 {
 		this.AddAtHead(val)
 		return
 	}
-
 	prev := this.Data
 	for i := 1; i < index; i++ {
 		prev = prev.Next
 	}
-	cur := &ListNode{
-		val,
-		prev.Next,
+	node := &DoublyListNode{val, prev, prev.Next}
+	if prev.Next != nil {
+		prev.Next.Prev = node
 	}
-	prev.Next = cur
+	prev.Next = node
 	this.Len++
 }
 
@@ -96,17 +102,34 @@ func (this *MyLinkedList) DeleteAtIndex(index int) {
 	if this.Len <= index {
 		return
 	}
-
+	if this.Len == 1 {
+		this.Len--
+		this.Data = nil
+		return
+	}
 	if index == 0 {
 		this.Data = this.Data.Next
+		this.Data.Prev = nil
 		this.Len--
 		return
 	}
-
-	prev := this.Data
-	for i := 1; i < index; i++ {
-		prev = prev.Next
+	curr := this.Data
+	for i := 0; i < index; i++ {
+		curr = curr.Next
 	}
-	prev.Next = prev.Next.Next
+	if curr.Next != nil {
+		curr.Next.Prev = curr.Prev
+	}
+	curr.Prev.Next = curr.Next
 	this.Len--
 }
+
+/**
+ * Your MyLinkedList object will be instantiated and called as such:
+ * obj := Constructor();
+ * param_1 := obj.Get(index);
+ * obj.AddAtHead(val);
+ * obj.AddAtTail(val);
+ * obj.AddAtIndex(index,val);
+ * obj.DeleteAtIndex(index);
+ */
